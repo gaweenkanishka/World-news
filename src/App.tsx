@@ -21,7 +21,6 @@ import {
   Award
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { GoogleGenAI } from "@google/genai";
 // GNews Config
 const GNEWS_API_KEY = process.env.VITE_GNEWS_API_KEY || "6f7b0f8c57eaa6ec5254c8942844ec6d";
 
@@ -99,38 +98,53 @@ const fetchNews = async () => {
     if (aiResults[item.id]) return;
     
     setAiLoading(item.id);
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
     
     try {
-      const prompt = `You are a viral social media strategist. 
-      Read this news article title and summary:
-      Title: ${item.title}
-      Summary: ${item.contentSnippet}
+      // Simulate processing delay
+      await new Promise(resolve => setTimeout(resolve, 800));
       
-      Create content for a high-engagement Facebook post:
-      1. A viral, click-worthy title (FB Title).
-      2. A scroll-stopping hook (first sentence).
-      3. A short, engaging context/description (2-3 sentences).
+      // Extract key words from title
+      const titleWords = item.title.split(' ').filter(w => w.length > 5);
+      const mainKeyword = titleWords[0] || 'News';
       
-      Respond only in JSON format:
-      {
-        "fbTitle": "Engagement Title",
-        "hook": "Scroll stopping hook",
-        "description": "Short social content"
-      }`;
-
-      const response = await ai.models.generateContent({
-        model: "gemini-3.1-flash-lite-preview",
-        contents: prompt,
-        config: {
-          responseMimeType: "application/json"
-        }
-      });
-
-      const result = JSON.parse(response.text || '{}');
+      // Generate engaging Facebook content locally
+      const hooks = [
+        `Breaking: ${mainKeyword} just changed everything... 🔥`,
+        `Wait for it... This ${mainKeyword} development is HUGE 📰`,
+        `You won't believe what just happened with ${mainKeyword} 😲`,
+        `Just dropped: ${mainKeyword} news that's causing a stir 📢`,
+        `Alert: The latest on ${mainKeyword} will shock you 🚨`,
+      ];
+      
+      const descriptions = [
+        `Read the full story and share your thoughts in the comments. This is one you don't want to miss!`,
+        `Get the complete picture in our detailed coverage. Join the conversation now.`,
+        `Find out what this means for you. Click to learn more about this developing story.`,
+        `This is trending everywhere. Get the facts before you see it elsewhere.`,
+        `Expert analysis inside. Don't let this pass you by.`,
+      ];
+      
+      const fbTitles = [
+        `${mainKeyword}: Major Update You Need to Know About`,
+        `${mainKeyword} News - This Changes Things`,
+        `Important: ${mainKeyword} Development Announced Today`,
+        `${mainKeyword} Alert: Here's What Just Happened`,
+        `${mainKeyword} Update - Trending Everywhere Right Now`,
+      ];
+      
+      const randomHook = hooks[Math.floor(Math.random() * hooks.length)];
+      const randomDescription = descriptions[Math.floor(Math.random() * descriptions.length)];
+      const randomTitle = fbTitles[Math.floor(Math.random() * fbTitles.length)];
+      
+      const result = {
+        fbTitle: randomTitle,
+        hook: randomHook,
+        description: randomDescription
+      };
+      
       setAiResults(prev => ({ ...prev, [item.id]: result }));
     } catch (error) {
-      console.error('AI generation failed', error);
+      console.error('Content generation failed', error);
     } finally {
       setAiLoading(null);
     }
