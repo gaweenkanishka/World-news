@@ -14,9 +14,17 @@ const GNEWS_API_KEY = process.env.VITE_GNEWS_API_KEY || "6f7b0f8c57eaa6ec5254c89
 
 const RSS_FEEDS = [
   { name: "BBC News", url: "http://feeds.bbci.co.uk/news/world/rss.xml" },
+  { name: "BBC Tech", url: "http://feeds.bbci.co.uk/news/science_and_environment/rss.xml" },
   { name: "Reuters", url: "https://www.reutersagency.com/feed/?best-topics=world-news&post_type=best" },
   { name: "Al Jazeera", url: "https://www.aljazeera.com/xml/rss/all.xml" },
-  { name: "The Guardian", url: "https://www.theguardian.com/world/rss" }
+  { name: "The Guardian", url: "https://www.theguardian.com/world/rss" },
+  { name: "The Guardian Tech", url: "https://www.theguardian.com/technology/rss" },
+  { name: "NPR News", url: "https://feeds.npr.org/1001/rss.xml" },
+  { name: "Associated Press", url: "https://apnews.com/feed" },
+  { name: "Reuters Business", url: "https://feeds.reuters.com/reuters/businessNews" },
+  { name: "DW News", url: "https://www.dw.com/en/xml/rss/english/all" },
+  { name: "France 24", url: "https://www.france24.com/en/rss" },
+  { name: "The Independent", url: "https://www.independent.co.uk/news/world/rss" }
 ];
 
 const COUNTRY_MAP: Record<string, string> = {
@@ -48,31 +56,47 @@ async function startServer() {
 
   // In-memory cache
   const cache: Record<string, { data: any, timestamp: number }> = {};
-  const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+  const CACHE_TTL = 30 * 60 * 1000; // 30 minutes for GNews
+  const RSS_CACHE_TTL = 15 * 60 * 1000; // 15 minutes for RSS feeds
 
   async function fetchRSS() {
     try {
       const results = await Promise.all(RSS_FEEDS.map(async (feed) => {
         try {
           const res = await parser.parseURL(feed.url);
-          return res.items.slice(0, 10).map(item => ({
-            id: item.guid || item.link || '',
-            title: item.title || '',
-            link: item.link || '',
-            pubDate: item.isoDate || item.pubDate || '',
-            contentSnippet: (item.contentSnippet || item.description || "").replace(/<[^>]*>?/gm, ''),
-            source: feed.name,
-            sourceUrl: item.link || feed.url,
-            image: "", 
-            region: "World",
-            topic: "General"
-          }));
+          return res.items.slice(0, 10).map(item => {
+            // Clean and enhance description
+            let description = (item.contentSnippet || item.description || "").replace(/<[^>]*>?/gm, '');
+            // Ensure description is descriptive (at least 80 chars)
+            if (description.length < 80 && item.content) {
+              description = item.content.replace(/<[^>]*>?/gm, '').substring(0, 200);
+            }
+            // Truncate at word boundary
+            if (description.length > 200) {
+              description = description.substring(0, 200).replace(/\s+\S*$/, '') + '...';
+            }
+            
+            return {
+              id: item.guid || item.link || '',
+              title: item.title || '',
+              link: item.link || '',
+              pubDate: item.isoDate || item.pubDate || '',
+              contentSnippet: description,
+              source: feed.name,
+              sourceUrl: item.link || feed.url,
+              image: "", 
+              region: "World",
+              topic: "General"
+            };
+          });
         } catch (e) {
+          console.warn(`[RSS Error] Failed to parse ${feed.name}: ${e}`);
           return [];
         }
       }));
       return results.flat().sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
     } catch (e) {
+      console.error('[RSS Fetch Error]:', e);
       return [];
     }
   }
@@ -103,18 +127,26 @@ async function startServer() {
       let finalNews = [];
 
       if (gnewsData.articles) {
-        finalNews = gnewsData.articles.map((item: any) => ({
-          id: item.url,
-          title: item.title,
-          link: item.url,
-          pubDate: item.publishedAt,
-          contentSnippet: item.description || item.content,
-          source: item.source.name,
-          sourceUrl: item.source.url,
-          image: item.image,
-          region: trending === 'true' ? "Trending" : (region || "World"),
-          topic: trending === 'true' ? "Global Peaks" : (topic || "General"),
-        }));
+        finalNews = gnewsData.articles.map((item: any) => {
+          // Create more descriptive content
+          const description = item.description || item.content || '';
+          const enhancedSnippet = description.length > 150 
+            ? description.substring(0, 200) + '...'
+            : description;
+          
+          return {
+            id: item.url,
+            title: item.title,
+            link: item.url,
+            pubDate: item.publishedAt,
+            contentSnippet: enhancedSnippet,
+            source: item.source.name,
+            sourceUrl: item.source.url,
+            image: item.image,
+            region: trending === 'true' ? "Trending" : (region || "World"),
+            topic: trending === 'true' ? "Global Peaks" : (topic || "General"),
+          };
+        });
       } else {
         console.warn("[GNews Quota/Error] Falling back to RSS");
         finalNews = await fetchRSS();

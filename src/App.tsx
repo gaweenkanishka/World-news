@@ -378,7 +378,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
         <h2 className="font-serif text-2xl lg:text-3xl leading-[1.1] mb-4 group-hover:italic transition-all">
           {item.title}
         </h2>
-        <p className="text-xs text-[#666] leading-relaxed line-clamp-3">
+        <p className="text-sm text-[#555] leading-relaxed line-clamp-5">
           {item.contentSnippet}
         </p>
       </div>
