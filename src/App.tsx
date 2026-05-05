@@ -103,43 +103,64 @@ const fetchNews = async () => {
       // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Extract key words from title
+      // Extract key information from the article
       const titleWords = item.title.split(' ').filter(w => w.length > 5);
       const mainKeyword = titleWords[0] || 'News';
+      const articleContext = item.contentSnippet.substring(0, 100);
       
-      // Generate engaging Facebook content locally
-      const hooks = [
-        `Breaking: ${mainKeyword} just changed everything... 🔥`,
-        `Wait for it... This ${mainKeyword} development is HUGE 📰`,
-        `You won't believe what just happened with ${mainKeyword} 😲`,
-        `Just dropped: ${mainKeyword} news that's causing a stir 📢`,
-        `Alert: The latest on ${mainKeyword} will shock you 🚨`,
+      // Emotional hooks optimized for scroll-stopping
+      const emotionalHooks = [
+        `🚨 BREAKING: What just happened with ${mainKeyword} will leave you speechless...`,
+        `😱 WAIT... This ${mainKeyword} development is even bigger than you think! 👀`,
+        `🔥 VIRAL NOW: The latest on ${mainKeyword} has the whole internet talking!`,
+        `📢 ALERT: You need to see this ${mainKeyword} update IMMEDIATELY...`,
+        `💥 SHOCKING: This ${mainKeyword} story just took an unexpected turn!`,
+        `👁️ EXCLUSIVE: Inside details on the ${mainKeyword} situation everyone's discussing...`,
+        `⚡ JUST IN: This ${mainKeyword} news has people SHOCKED and reacting...`,
+        `🎯 TRENDING: The ${mainKeyword} story everyone's sharing right now explained...`,
       ];
       
-      const descriptions = [
-        `Read the full story and share your thoughts in the comments. This is one you don't want to miss!`,
-        `Get the complete picture in our detailed coverage. Join the conversation now.`,
-        `Find out what this means for you. Click to learn more about this developing story.`,
-        `This is trending everywhere. Get the facts before you see it elsewhere.`,
-        `Expert analysis inside. Don't let this pass you by.`,
+      // Detailed engagement scripts with context
+      const engagementScripts = [
+        `📖 Read the full breakdown of what's happening. This is one of those stories where context MATTERS. Tap to understand why ${mainKeyword} is trending everywhere right now and what it means for you.`,
+        `💬 What's your take on this? This developing ${mainKeyword} situation is sparking conversations across platforms. Get the complete picture and join the discussion in the comments.`,
+        `🔍 Here's what you need to know: The latest on ${mainKeyword} has significant implications. Deep dive into our comprehensive coverage and expert analysis of this breaking story.`,
+        `⏰ Don't miss the details: This ${mainKeyword} update is being shared thousands of times. Click to explore the full story, timeline, and what happens next.`,
+        `📰 Behind the headlines: The real story on ${mainKeyword} is more nuanced than you might think. Discover the key facts and expert perspectives on this major development.`,
+        `🎬 Watch how this unfolds: The ${mainKeyword} situation is evolving fast. Stay informed with real-time updates and insightful analysis of this trending topic.`,
       ];
       
-      const fbTitles = [
-        `${mainKeyword}: Major Update You Need to Know About`,
-        `${mainKeyword} News - This Changes Things`,
-        `Important: ${mainKeyword} Development Announced Today`,
-        `${mainKeyword} Alert: Here's What Just Happened`,
-        `${mainKeyword} Update - Trending Everywhere Right Now`,
+      // Compelling headline variations
+      const fbHeadlines = [
+        `${mainKeyword}: The Story Everyone's Talking About Right Now`,
+        `Breaking: What You Need to Know About ${mainKeyword}`,
+        `${mainKeyword} Just Changed Everything - Here's Why`,
+        `JUST ANNOUNCED: Major ${mainKeyword} Update That's Trending`,
+        `The ${mainKeyword} Situation Explained: Full Details Inside`,
+        `${mainKeyword} Alert: This Development Has Everyone Surprised`,
+        `Here's What's Really Happening With ${mainKeyword}`,
+        `Inside Story: The Latest on ${mainKeyword} That's Going Viral`,
       ];
       
-      const randomHook = hooks[Math.floor(Math.random() * hooks.length)];
-      const randomDescription = descriptions[Math.floor(Math.random() * descriptions.length)];
-      const randomTitle = fbTitles[Math.floor(Math.random() * fbTitles.length)];
+      // Image post description (short snippet for sharing with images)
+      const imageDescriptions = [
+        `Tap to read: ${item.title.substring(0, 50)}...`,
+        `Swipe for details: The ${mainKeyword} story explained`,
+        `📸 See more: Complete coverage of this developing story`,
+        `👉 Full article: What's happening with ${mainKeyword}`,
+        `Learn more: Why this ${mainKeyword} story is trending`,
+      ];
+      
+      const randomHook = emotionalHooks[Math.floor(Math.random() * emotionalHooks.length)];
+      const randomDescription = engagementScripts[Math.floor(Math.random() * engagementScripts.length)];
+      const randomTitle = fbHeadlines[Math.floor(Math.random() * fbHeadlines.length)];
+      const randomImageCaption = imageDescriptions[Math.floor(Math.random() * imageDescriptions.length)];
       
       const result = {
         fbTitle: randomTitle,
         hook: randomHook,
-        description: randomDescription
+        description: randomDescription,
+        imageCaption: randomImageCaption
       };
       
       setAiResults(prev => ({ ...prev, [item.id]: result }));
@@ -453,6 +474,13 @@ const NewsCard: React.FC<NewsCardProps> = ({
                   onCopy={onCopy} 
                   copiedField={copiedField} 
                   multiline
+                />
+                <CopyField 
+                  label="Image Caption" 
+                  value={aiResult.imageCaption || 'Tap for full story'} 
+                  id={`img-${item.id}`} 
+                  onCopy={onCopy} 
+                  copiedField={copiedField} 
                 />
               </div>
             </div>
